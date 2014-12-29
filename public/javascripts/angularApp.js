@@ -17,7 +17,12 @@ function($stateProvider, $urlRouterProvider) {
     }).state('posts', {
       url: '/posts/{id}',
       templateUrl: '/posts.html',
-      controller: 'PostsCtrl'
+      controller: 'PostsCtrl',
+      resolve: {
+        post: ['$stateParams', 'posts', function($stateParams, posts) {
+          return posts.get($stateParams.id);
+        }]
+      }
     });
 
   $urlRouterProvider.otherwise('home');
@@ -45,6 +50,23 @@ function($stateProvider, $urlRouterProvider) {
         post.upvotes += 1;
       });
   };
+  o.get = function(id) {
+  return $http.get('/posts/' + id).then(function(res){
+    return res.data;
+  });
+  };
+
+  o.addComment = function(id, comment) {
+    console.log(comment);
+    return $http.post('/posts/' + id + '/comments', comment);
+  };
+  o.upvoteComment = function(post, comment) {
+    return $http.put('/posts/' + post._id + '/comments/'+ comment._id + '/upvote')
+      .success(function(data){
+        comment.upvotes += 1;
+      });
+  };
+
   return o;
 }])
 .controller('MainCtrl', [
@@ -84,12 +106,23 @@ $scope.incrementUpvotes = function(post) {
 }])
 .controller('PostsCtrl', [
 '$scope',
-'$stateParams',
 'posts',
-function($scope, $stateParams, posts){
-  console.log($stateParams.id);
-  $scope.post = posts.posts[$stateParams.id];
-    $scope.incrementUpvotes = function(post) {
-  post.upvotes += 1;
+'post',
+function($scope, posts, post){
+  $scope.post = post;
+  $scope.incrementUpvotes = function(comment){
+    console.log('22222222');
+    posts.upvoteComment(post, comment);
+  };
+  $scope.addComment = function(){
+    if($scope.body === '') { return; }
+    console.log(post._id);
+    posts.addComment(post._id, {
+      body: $scope.body,
+      author: 'user',
+    }).success(function(comment) {
+      $scope.post.comments.push(comment);
+    });
+    $scope.body = '';
   };
 }]);
