@@ -57,7 +57,6 @@ function($stateProvider, $urlRouterProvider) {
   };
 
   o.addComment = function(id, comment) {
-    console.log(comment);
     return $http.post('/posts/' + id + '/comments', comment);
   };
   o.upvoteComment = function(post, comment) {
@@ -111,7 +110,6 @@ $scope.incrementUpvotes = function(post) {
 function($scope, posts, post){
   $scope.post = post;
   $scope.incrementUpvotes = function(comment){
-    console.log('22222222');
     posts.upvoteComment(post, comment);
   };
   $scope.addComment = function(){

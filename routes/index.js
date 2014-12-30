@@ -30,7 +30,7 @@ router.post('/posts', function(req, res, next) {
   });
 });
 
-router.param('post', function(req, res, next, id) {
+router.param('postParam', function(req, res, next, id) {
   var query = Post.findById(id);
 
   query.exec(function (err, post){
@@ -42,8 +42,21 @@ router.param('post', function(req, res, next, id) {
   });
 });
 
+router.param('commentParam', function(req, res, next, id) {
+  var query = Comment.findById(id);
 
-router.put('/posts/:post/upvote', function(req, res, next) {
+  query.exec(function (err, comment){
+    if (err) { return next(err); }
+    if (!comment) { return next(new Error("can't find comment")); }
+
+    req.post.comment = comment;
+    return next();
+  });
+});
+
+
+
+router.put('/posts/:postParam/upvote', function(req, res, next) {
   req.post.upvote(function(err, post){
     if (err) { return next(err); }
 
@@ -51,13 +64,10 @@ router.put('/posts/:post/upvote', function(req, res, next) {
   });
 });
 
-router.post('/posts/:post/comments', function(req, res, next) {
+router.post('/posts/:postParam/comments', function(req, res, next) {
   var comment = new Comment(req.body);
-  comment.post = req.post;
-  console.log(req.post);
   comment.save(function(err, comment){
     if(err){ return next(err); }
-
     req.post.comments.push(comment);
     req.post.save(function(err, post) {
       if(err){ return next(err); }
@@ -67,7 +77,16 @@ router.post('/posts/:post/comments', function(req, res, next) {
   });
 });
 
-router.get('/posts/:post', function(req, res, next) {
+router.put('/posts/:postParam/comments/:commentParam/upvote', function(req, res, next) {
+  console.log('22234444');
+  req.post.comment.upvote(function(err, post){
+    if (err) { return next(err); }
+
+    res.json(post);
+  });
+});
+
+router.get('/posts/:postParam', function(req, res, next) {
   req.post.populate('comments', function(err, post) {
     res.json(post);
   });
